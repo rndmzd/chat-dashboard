@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Chat Dashboard</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+        .user-container {
+            display: flex;
+            flex-wrap: wrap;
+        }
+        .user-panel {
+            border: 1px solid #ccc;
+            margin: 5px;
+            padding: 10px;
+            width: 300px;
+            height: 400px;
+            overflow-y: scroll;
+        }
+        .user-panel h2 {
+            margin-top: 0;
+        }
+        .message {
+            margin-bottom: 5px;
+        }
+        .timestamp {
+            color: gray;
+            font-size: small;
+        }
+    </style>
+</head>
+<body>
+    <h1>Chat Dashboard</h1>
+    <div class="user-container" id="user-container">
+        <!-- User panels will be added here -->
+    </div>
+
+    <!-- Include Socket.IO client -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.4.1/socket.io.min.js"></script>
+    <script>
+        const socket = io();
+
+        const userPanels = {};
+
+        socket.on('connect', () => {
+            console.log('Connected to server');
+        });
+
+        socket.on('new_message', (data) => {
+            const { user, message, timestamp } = data;
+
+            // Check if user panel exists, if not create one
+            if (!userPanels[user]) {
+                const userContainer = document.getElementById('user-container');
+
+                const userPanel = document.createElement('div');
+                userPanel.className = 'user-panel';
+                userPanel.id = `user-${user}`;
+
+                const userHeader = document.createElement('h2');
+                userHeader.textContent = `${user}`;
+                userPanel.appendChild(userHeader);
+
+                const messagesList = document.createElement('div');
+                messagesList.className = 'messages-list';
+                userPanel.appendChild(messagesList);
+
+                userContainer.appendChild(userPanel);
+
+                userPanels[user] = messagesList;
+            }
+
+            // Add message to user's panel
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message';
+
+            const timestampSpan = document.createElement('span');
+            timestampSpan.className = 'timestamp';
+            timestampSpan.textContent = `[${timestamp}] `;
+
+            const contentSpan = document.createElement('span');
+            contentSpan.textContent = message;
+
+            messageDiv.appendChild(timestampSpan);
+            messageDiv.appendChild(contentSpan);
+
+            userPanels[user].appendChild(messageDiv);
+
+            // Scroll to the bottom of the user panel
+            const userPanelDiv = document.getElementById(`user-${user}`);
+            userPanelDiv.scrollTop = userPanelDiv.scrollHeight;
+        });
+    </script>
+</body>
+</html>
